@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prévisions</title>
+</head>
+
+<body>
+    Ville : <input type="text" id="Ville">
+    <input onclick="UpdateCity()" type="submit" id="button" value="Prévisions">
+    <div id="chart" style="margin:auto;"></div>
+</body>
+
+<script src="jquery-3.4.1.min.js"></script>
+<script src="https://www.gstatic.com/charts/loader.js"></script>
+<script defer>
+    const maxRequests = 100;
+    let remainingRequests;
+    let data = null;
+    google.charts.load('current', { packages: ['corechart'], language: 'fr' });
+    google.charts.setOnLoadCallback(UpdateCity);
+
+    function UpdateCity() {
+        let city = document.getElementById("Ville").value;
+        if (city != "") {
+            let API_Key = "1b5d5a32335b72d0b6d7f801889944a0";
+            let url = "https://api.openweathermap.org/data/2.5/forecast?units=metric&q=" + city + "&appid=" + API_Key;
+            $.ajax({
+                url: url,
+                success: (result) => {
+                    let prev = result.list;
+                    getTempPredictions(prev);
+                },
+                error: (error) => {
+                    console.log(error);
+                }
+            })
+        }
+        return city;
+    }
+    function getTempPredictions(prev) {
+        let city = "";
+        let TabTemp = [];
+
+        if (prev.length == 0) {
+            city = UpdateCity();
+        }
+        prev.forEach(element => {
+            TabTemp.push([element["dt_txt"], element["main"]["temp_max"], element["main"]["temp_min"]])
+        });
+        data = new google.visualization.DataTable();
+        data.addColumn('string', 'date');
+        data.addColumn('number', 'Maximum');
+        data.addColumn('number', 'Minimum');
+        data.addRows(TabTemp);
+        draw_Rates_History();
+    }
+    function draw_Rates_History() {
+        if (document.getElementById("Ville").value != "") {
+            var results = {
+                title: document.getElementById("Ville").value + " - Prévision 14 jours 2023",
+                titleTextStyle: { fontSize: '32', color: 'purple' },
+                series: { 0: { color: 'cyan' } }
+            };
+            var lineChart = new google.visualization.LineChart(document.getElementById('chart'));
+            lineChart.draw(data, results)
+        }
+    }
+</script>
+
+</html>
